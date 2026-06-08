@@ -12,14 +12,17 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 public class Main extends JPanel {
 
     private final int GRID_WIDTH = 192;
-    private final int CELL_HEIGHT = 108;
+    private final int GRID_HEIGHT = 108;
     private final int CELL_SIZE = 10;
+    private final int FPS = 30;
 
     private Set<Point> LivingCells = new HashSet<>();
+    private Set<Point> Cells = new HashSet<>();
 
     private Point LastClicked = new Point();
 
@@ -43,8 +46,6 @@ public class Main extends JPanel {
         super.paintComponent(graphics);
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, getWidth(), getHeight());
-
-        initField();
 
         //DOES: Draws all living cells
         for (Point cell : LivingCells) {
@@ -94,6 +95,11 @@ public class Main extends JPanel {
 
     private Main() {
         initListeners();
+        initField();
+        Timer timer = new Timer(1000 / FPS, e -> {
+            tick();
+        });
+        timer.start();
     }
 
     @Override
@@ -107,19 +113,20 @@ public class Main extends JPanel {
         int x = 0;
         int y = 0;
 
-        for (int i = 0; i < GRID_WIDTH * CELL_HEIGHT; i++) {//BUG: To big but who cares
+        for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++) {//BUG: To big but who cares
             if (x < GRID_WIDTH) {
                 graphics.drawRect(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
+                Cells.add(new Point(x * CELL_SIZE, y * CELL_SIZE));
                 x++;
             } else {
                 x = 0;
                 y++;
             }
         }
+
     }
 
     private void CellHandler(Point ClickedPos) {
-        Point CellCornerPos = getCellCorner(ClickedPos);
         Point CellGridPos = getCellCorner(ClickedPos);
         saveLivingCell(CellGridPos);
         repaint();
@@ -144,7 +151,22 @@ public class Main extends JPanel {
     }
 
     private void NextFrame() {
-        GetNeighborCount(getCellCorner(LastClicked));
+        Set<Point> nextGen = new HashSet<>();
+
+        for (Point cell : Cells) {
+            int neighbors = GetNeighborCount(cell);
+            if (LivingCells.contains(cell)) {
+                if (neighbors == 2 || neighbors == 3) {
+                    nextGen.add(cell);
+                }
+            } else {
+                if (neighbors == 3) {
+                    nextGen.add(cell);
+                }
+            }
+        }
+        LivingCells = nextGen;
+        repaint();
     }
 
     private int GetNeighborCount(Point CellCorner) {
@@ -161,8 +183,7 @@ public class Main extends JPanel {
                 LivingNeighbors++;
             }
         }
-
-        System.out.println(LivingNeighbors);
         return LivingNeighbors;
+
     }
 }
