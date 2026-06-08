@@ -19,7 +19,8 @@ public class Main extends JPanel {
     private final int GRID_WIDTH = 192;
     private final int GRID_HEIGHT = 108;
     private final int CELL_SIZE = 10;
-    private final int FPS = 30;
+    private int FPS = 5;
+    private final int FPSModifier = 5;
 
     private Set<Point> LivingCells = new HashSet<>();
     private Set<Point> Cells = new HashSet<>();
@@ -29,6 +30,9 @@ public class Main extends JPanel {
     private Graphics graphics;
 
     private boolean isMousePressed = false;
+    private boolean paused = true;
+    private boolean wasPaused = false;
+    Timer timer;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
@@ -47,6 +51,8 @@ public class Main extends JPanel {
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
+        initField();
+
         //DOES: Draws all living cells
         for (Point cell : LivingCells) {
             graphics.fillRect((int) cell.x, (int) cell.y, CELL_SIZE, CELL_SIZE);
@@ -61,14 +67,20 @@ public class Main extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    isMousePressed = true;
+                    if (!paused) {
+                        wasPaused = true;
+                        paused = true;
+                    }
                 }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (wasPaused) {
+                    wasPaused = false;
+                    paused = false;
+                }
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    isMousePressed = false;
                     LastClicked = new Point(e.getX(), e.getY());
                     CellHandler(LastClicked);
                 }
@@ -89,17 +101,47 @@ public class Main extends JPanel {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     NextFrame();
                 }
+                if (e.getKeyCode() == KeyEvent.VK_P) {
+                    paused = !paused;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_C) {
+                    LivingCells.clear();
+                    repaint();
+                }
+                if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    FPS += FPSModifier;
+                    initTimer(FPS);
+                }
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    if (FPS - FPSModifier <= 0) {
+                        FPS = 1;
+                    } else {
+                        FPS -= FPSModifier;
+                    }
+                    System.out.println(FPS);
+                    initTimer(FPS);
+                }
             }
         });
     }
 
     private Main() {
         initListeners();
-        initField();
-        Timer timer = new Timer(1000 / FPS, e -> {
-            tick();
-        });
+        initTimer(FPS);
+    }
+
+    private void initTimer(int fps) {
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = new Timer(1000 / fps, e -> tick());
         timer.start();
+    }
+
+    private void tick() {
+        if (paused == false) {
+            NextFrame();
+        }
     }
 
     @Override
