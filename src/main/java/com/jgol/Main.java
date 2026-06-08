@@ -19,17 +19,18 @@ public class Main extends JPanel {
     private final int GRID_WIDTH = 192;
     private final int GRID_HEIGHT = 108;
     private final int CELL_SIZE = 10;
-    private int FPS = 5;
+    private int FPS = 15;
     private final int FPSModifier = 5;
 
     private Set<Point> LivingCells = new HashSet<>();
     private Set<Point> Cells = new HashSet<>();
 
     private Point LastClicked = new Point();
+    private Point LastDragPoint = null;
 
     private Graphics graphics;
 
-    private boolean isMousePressed = false;
+    private boolean MousePressed = false;
     private boolean paused = true;
     private boolean wasPaused = false;
     Timer timer;
@@ -38,10 +39,8 @@ public class Main extends JPanel {
         JFrame frame = new JFrame();
         frame.setSize(java.awt.Toolkit.getDefaultToolkit().getScreenSize());
         frame.add(new Main());
-        //frame.setSize(500, 500);
         frame.setTitle("JavaGameOfLife");
         frame.setVisible(true);
-
     }
 
     @Override
@@ -53,7 +52,7 @@ public class Main extends JPanel {
 
         initField();
 
-        //DOES: Draws all living cells
+        graphics.setColor(Color.GRAY);
         for (Point cell : LivingCells) {
             graphics.fillRect((int) cell.x, (int) cell.y, CELL_SIZE, CELL_SIZE);
         }
@@ -71,11 +70,13 @@ public class Main extends JPanel {
                         wasPaused = true;
                         paused = true;
                     }
+                    MousePressed = true;
                 }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                LastDragPoint = null;
                 if (wasPaused) {
                     wasPaused = false;
                     paused = false;
@@ -84,14 +85,30 @@ public class Main extends JPanel {
                     LastClicked = new Point(e.getX(), e.getY());
                     CellHandler(LastClicked);
                 }
+                MousePressed = false;
             }
         });
 
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                LastClicked = new Point(e.getX(), e.getY());
-                CellHandler(LastClicked);
+                Point current = new Point(e.getX(), e.getY());
+
+                if (LastDragPoint != null) {
+                    int dx = current.x - LastDragPoint.x;
+                    int dy = current.y - LastDragPoint.y;
+                    int steps = Math.max(Math.abs(dx), Math.abs(dy)) / CELL_SIZE + 1;
+
+                    for (int i = 0; i <= steps; i++) {
+                        int x = LastDragPoint.x + dx * i / steps;
+                        int y = LastDragPoint.y + dy * i / steps;
+                        CellHandler(new Point(x, y));
+                    }
+                } else {
+                    CellHandler(current);
+                }
+
+                LastDragPoint = current;
             }
         });
 
@@ -118,7 +135,6 @@ public class Main extends JPanel {
                     } else {
                         FPS -= FPSModifier;
                     }
-                    System.out.println(FPS);
                     initTimer(FPS);
                 }
             }
@@ -139,7 +155,7 @@ public class Main extends JPanel {
     }
 
     private void tick() {
-        if (paused == false) {
+        if (!paused) {
             NextFrame();
         }
     }
@@ -151,11 +167,11 @@ public class Main extends JPanel {
     }
 
     private void initField() {
-        graphics.setColor(Color.gray);
+        graphics.setColor(Color.GRAY);
         int x = 0;
         int y = 0;
 
-        for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++) {//BUG: To big but who cares
+        for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++) {
             if (x < GRID_WIDTH) {
                 graphics.drawRect(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
                 Cells.add(new Point(x * CELL_SIZE, y * CELL_SIZE));
@@ -165,7 +181,6 @@ public class Main extends JPanel {
                 y++;
             }
         }
-
     }
 
     private void CellHandler(Point ClickedPos) {
@@ -183,9 +198,7 @@ public class Main extends JPanel {
         String CellCornerYflooredString = CellCornerYString.substring(0, CellCornerYString.length() - 1) + "0";
         int CellCornerY = Integer.parseInt(CellCornerYflooredString);
 
-        Point output = new Point(CellCornerX, CellCornerY);
-
-        return output;
+        return new Point(CellCornerX, CellCornerY);
     }
 
     private void saveLivingCell(Point GridCellPos) {
@@ -220,12 +233,12 @@ public class Main extends JPanel {
 
         int LivingNeighbors = 0;
         for (int[] direction : directions) {
-            if (LivingCells.contains(new Point(CellCorner.x + direction[0] * CELL_SIZE,
+            if (LivingCells.contains(new Point(
+                    CellCorner.x + direction[0] * CELL_SIZE,
                     CellCorner.y + direction[1] * CELL_SIZE))) {
                 LivingNeighbors++;
             }
         }
         return LivingNeighbors;
-
     }
 }
