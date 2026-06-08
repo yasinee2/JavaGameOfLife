@@ -2,13 +2,12 @@ package com.jgol;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import com.badlogic.gdx.math.Vector2;
 
 public class Main extends JPanel {
 
@@ -16,10 +15,10 @@ public class Main extends JPanel {
     private final int CELL_HEIGHT = 108;
     private final int CELL_SIZE = 10;
 
-    private Vector2[] LivingCells = new Vector2[CELL_WIDTH * CELL_HEIGHT];
+    private Point[] LivingCells = new Point[CELL_WIDTH * CELL_HEIGHT];
     private int LivingCellsCount = 0;
 
-    private Vector2 LastClicked = new Vector2();
+    private Point LastClicked = new Point();
 
     private Graphics graphics;
 
@@ -63,7 +62,7 @@ public class Main extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = false;
-                    LastClicked = new Vector2(e.getX(), e.getY());
+                    LastClicked = new Point(e.getX(), e.getY());
 
                 }
             }
@@ -98,14 +97,14 @@ public class Main extends JPanel {
         }
     }
 
-    private Vector2 TurnPosIntoCellPos(int clickedX, int clickedY) {
-        Vector2 CellCorner = getCellCorner(clickedX, clickedY);
-        Vector2 output = new Vector2(CellCorner.x / 10, CellCorner.y / 10);
+    private Point TurnPosIntoCellPos(int clickedX, int clickedY) {
+        Point CellCorner = getCellCorner(clickedX, clickedY);
+        Point output = new Point(CellCorner.x / 10, CellCorner.y / 10);
 
         return output;
     }
 
-    private Vector2 getCellCorner(int ClickedX, int ClickedY) {
+    private Point getCellCorner(int ClickedX, int ClickedY) {
         String CellCornerXString = String.valueOf(ClickedX);
         String CellCornerXflooredString = CellCornerXString.substring(0, CellCornerXString.length() - 1) + "0";
         int CellCornerX = Integer.parseInt(CellCornerXflooredString);
@@ -114,16 +113,13 @@ public class Main extends JPanel {
         String CellCornerYflooredString = CellCornerYString.substring(0, CellCornerYString.length() - 1) + "0";
         int CellCornerY = Integer.parseInt(CellCornerYflooredString);
 
-        Vector2 output = new Vector2(CellCornerX, CellCornerY);
+        Point output = new Point(CellCornerX, CellCornerY);
         System.out.println(output);
 
         return output;
     }
 
-    private void RenderLivingCells(int clickedX, int clickedY {
+    private void RenderLivingCells(int clickedX, int clickedY) {
 
     }
-
-
-)
 }
