@@ -8,13 +8,18 @@ import java.awt.event.MouseEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import com.badlogic.gdx.math.Vector2;
+
 public class Main extends JPanel {
 
-    private final int SCREEN_WIDTH = 1920;
-    private final int SCREEN_HEIGHT = 1080;
+    private final int CELL_WIDTH = 192;
+    private final int CELL_HEIGHT = 108;
     private final int CELL_SIZE = 10;
 
-    private String[][] LivingCells = new String[SCREEN_WIDTH / CELL_SIZE][SCREEN_HEIGHT / CELL_SIZE];
+    private Vector2[] LivingCells = new Vector2[CELL_WIDTH * CELL_HEIGHT];
+    private int LivingCellsCount = 0;
+
+    private Vector2 LastClicked = new Vector2();
 
     private Graphics graphics;
 
@@ -38,6 +43,10 @@ public class Main extends JPanel {
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
         initField();
+
+        for (int i = 0; i < LivingCellsCount; i++) {
+            graphics.drawRect((int) LivingCells[i].x, (int) LivingCells[i].y, CELL_SIZE, CELL_SIZE);
+        }
     }
 
     private void initMouseListener() {
@@ -46,7 +55,7 @@ public class Main extends JPanel {
             public void mousePressed(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = true;
-                    TurnPosIntoCellPos(e.getX(), e.getY());
+
                 }
             }
 
@@ -54,6 +63,8 @@ public class Main extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = false;
+                    LastClicked = new Vector2(e.getX(), e.getY());
+
                 }
             }
         });
@@ -76,8 +87,8 @@ public class Main extends JPanel {
         int x = 0;
         int y = 0;
 
-        for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {//BUG: To big but who cares
-            if (x < SCREEN_WIDTH / CELL_SIZE) {
+        for (int i = 0; i < CELL_WIDTH * CELL_HEIGHT; i++) {//BUG: To big but who cares
+            if (x < CELL_WIDTH) {
                 graphics.drawRect(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
                 x++;
             } else {
@@ -87,22 +98,32 @@ public class Main extends JPanel {
         }
     }
 
-    private void TurnPosIntoCellPos(int clickedX, int clickedY) {
-        int HRayPos = clickedX;
-        int VRayPos = clickedY;
+    private Vector2 TurnPosIntoCellPos(int clickedX, int clickedY) {
+        Vector2 CellCorner = getCellCorner(clickedX, clickedY);
+        Vector2 output = new Vector2(CellCorner.x / 10, CellCorner.y / 10);
 
-        while (IsOnGrid(HRayPos) == false) {
-            HRayPos++;
-        }
+        return output;
     }
 
-    private boolean IsOnGrid(int pos) {
-        if ((pos / 10) % 1 != 0) {
-            System.out.println(pos);
-            return true;
-        } else {
-            System.err.println(pos);
-            return false;
-        }
+    private Vector2 getCellCorner(int ClickedX, int ClickedY) {
+        String CellCornerXString = String.valueOf(ClickedX);
+        String CellCornerXflooredString = CellCornerXString.substring(0, CellCornerXString.length() - 1) + "0";
+        int CellCornerX = Integer.parseInt(CellCornerXflooredString);
+
+        String CellCornerYString = String.valueOf(ClickedY);
+        String CellCornerYflooredString = CellCornerYString.substring(0, CellCornerYString.length() - 1) + "0";
+        int CellCornerY = Integer.parseInt(CellCornerYflooredString);
+
+        Vector2 output = new Vector2(CellCornerX, CellCornerY);
+        System.out.println(output);
+
+        return output;
     }
+
+    private void RenderLivingCells(int clickedX, int clickedY {
+
+    }
+
+
+)
 }
