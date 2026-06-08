@@ -3,8 +3,12 @@ package com.jgol;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -15,8 +19,7 @@ public class Main extends JPanel {
     private final int CELL_HEIGHT = 108;
     private final int CELL_SIZE = 10;
 
-    private Point[] LivingCells = new Point[GRID_WIDTH * CELL_HEIGHT];
-    private int LivingCellsCount = 0;
+    private Set<Point> LivingCells = new HashSet<>();
 
     private Point LastClicked = new Point();
 
@@ -43,18 +46,21 @@ public class Main extends JPanel {
 
         initField();
 
-        for (int i = 0; i < LivingCellsCount; i++) {
-            graphics.fillRect((int) LivingCells[i].x, (int) LivingCells[i].y, CELL_SIZE, CELL_SIZE);
+        //DOES: Draws all living cells
+        for (Point cell : LivingCells) {
+            graphics.fillRect((int) cell.x, (int) cell.y, CELL_SIZE, CELL_SIZE);
         }
     }
 
-    private void initMouseListener() {
+    private void initListeners() {
+        setFocusable(true);
+        requestFocusInWindow();
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = true;
-
                 }
             }
 
@@ -63,8 +69,7 @@ public class Main extends JPanel {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = false;
                     LastClicked = new Point(e.getX(), e.getY());
-                    CellHandler(LastClicked.x, LastClicked.y);
-
+                    CellHandler(LastClicked);
                 }
             }
         });
@@ -73,14 +78,28 @@ public class Main extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 LastClicked = new Point(e.getX(), e.getY());
-                CellHandler(LastClicked.x, LastClicked.y);
+                CellHandler(LastClicked);
+            }
+        });
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    NextFrame();
+                }
             }
         });
     }
 
     private Main() {
-        initMouseListener();
+        initListeners();
+    }
 
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        requestFocusInWindow();
     }
 
     private void initField() {
@@ -99,19 +118,19 @@ public class Main extends JPanel {
         }
     }
 
-    private void CellHandler(int ClickedX, int ClickedY) {
-        Point CellCornerPos = getCellCorner(ClickedX, ClickedY);
-        Point CellGridPos = getCellCorner(ClickedX, ClickedY);
-        saveLivingCell(CellGridPos.x, CellGridPos.y);
+    private void CellHandler(Point ClickedPos) {
+        Point CellCornerPos = getCellCorner(ClickedPos);
+        Point CellGridPos = getCellCorner(ClickedPos);
+        saveLivingCell(CellGridPos);
         repaint();
     }
 
-    private Point getCellCorner(int ClickedX, int ClickedY) {
-        String CellCornerXString = String.valueOf(ClickedX);
+    private Point getCellCorner(Point ClickedPos) {
+        String CellCornerXString = String.valueOf(ClickedPos.x);
         String CellCornerXflooredString = CellCornerXString.substring(0, CellCornerXString.length() - 1) + "0";
         int CellCornerX = Integer.parseInt(CellCornerXflooredString);
 
-        String CellCornerYString = String.valueOf(ClickedY);
+        String CellCornerYString = String.valueOf(ClickedPos.y);
         String CellCornerYflooredString = CellCornerYString.substring(0, CellCornerYString.length() - 1) + "0";
         int CellCornerY = Integer.parseInt(CellCornerYflooredString);
 
@@ -120,9 +139,30 @@ public class Main extends JPanel {
         return output;
     }
 
-    private void saveLivingCell(int GridCellPosX, int GridCellPosY) {
-        LivingCells[LivingCellsCount] = new Point(GridCellPosX, GridCellPosY);
+    private void saveLivingCell(Point GridCellPos) {
+        LivingCells.add(GridCellPos);
+    }
 
-        LivingCellsCount++;
+    private void NextFrame() {
+        GetNeighborCount(getCellCorner(LastClicked));
+    }
+
+    private int GetNeighborCount(Point CellCorner) {
+        int[][] directions = {
+            {-1, -1}, {0, -1}, {1, -1},
+            {-1, 0}, {1, 0},
+            {-1, 1}, {0, 1}, {1, 1}
+        };
+
+        int LivingNeighbors = 0;
+        for (int[] direction : directions) {
+            if (LivingCells.contains(new Point(CellCorner.x + direction[0] * CELL_SIZE,
+                    CellCorner.y + direction[1] * CELL_SIZE))) {
+                LivingNeighbors++;
+            }
+        }
+
+        System.out.println(LivingNeighbors);
+        return LivingNeighbors;
     }
 }
