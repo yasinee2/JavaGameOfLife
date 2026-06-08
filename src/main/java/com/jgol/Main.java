@@ -11,11 +11,11 @@ import javax.swing.JPanel;
 
 public class Main extends JPanel {
 
-    private final int CELL_WIDTH = 192;
+    private final int GRID_WIDTH = 192;
     private final int CELL_HEIGHT = 108;
     private final int CELL_SIZE = 10;
 
-    private Point[] LivingCells = new Point[CELL_WIDTH * CELL_HEIGHT];
+    private Point[] LivingCells = new Point[GRID_WIDTH * CELL_HEIGHT];
     private int LivingCellsCount = 0;
 
     private Point LastClicked = new Point();
@@ -44,7 +44,7 @@ public class Main extends JPanel {
         initField();
 
         for (int i = 0; i < LivingCellsCount; i++) {
-            graphics.drawRect((int) LivingCells[i].x, (int) LivingCells[i].y, CELL_SIZE, CELL_SIZE);
+            graphics.fillRect((int) LivingCells[i].x, (int) LivingCells[i].y, CELL_SIZE, CELL_SIZE);
         }
     }
 
@@ -63,6 +63,7 @@ public class Main extends JPanel {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     isMousePressed = false;
                     LastClicked = new Point(e.getX(), e.getY());
+                    CellHandler(LastClicked.x, LastClicked.y);
 
                 }
             }
@@ -71,7 +72,8 @@ public class Main extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-
+                LastClicked = new Point(e.getX(), e.getY());
+                CellHandler(LastClicked.x, LastClicked.y);
             }
         });
     }
@@ -86,8 +88,8 @@ public class Main extends JPanel {
         int x = 0;
         int y = 0;
 
-        for (int i = 0; i < CELL_WIDTH * CELL_HEIGHT; i++) {//BUG: To big but who cares
-            if (x < CELL_WIDTH) {
+        for (int i = 0; i < GRID_WIDTH * CELL_HEIGHT; i++) {//BUG: To big but who cares
+            if (x < GRID_WIDTH) {
                 graphics.drawRect(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
                 x++;
             } else {
@@ -97,11 +99,11 @@ public class Main extends JPanel {
         }
     }
 
-    private Point TurnPosIntoCellPos(int clickedX, int clickedY) {
-        Point CellCorner = getCellCorner(clickedX, clickedY);
-        Point output = new Point(CellCorner.x / 10, CellCorner.y / 10);
-
-        return output;
+    private void CellHandler(int ClickedX, int ClickedY) {
+        Point CellCornerPos = getCellCorner(ClickedX, ClickedY);
+        Point CellGridPos = getCellCorner(ClickedX, ClickedY);
+        saveLivingCell(CellGridPos.x, CellGridPos.y);
+        repaint();
     }
 
     private Point getCellCorner(int ClickedX, int ClickedY) {
@@ -114,12 +116,13 @@ public class Main extends JPanel {
         int CellCornerY = Integer.parseInt(CellCornerYflooredString);
 
         Point output = new Point(CellCornerX, CellCornerY);
-        System.out.println(output);
 
         return output;
     }
 
-    private void RenderLivingCells(int clickedX, int clickedY) {
+    private void saveLivingCell(int GridCellPosX, int GridCellPosY) {
+        LivingCells[LivingCellsCount] = new Point(GridCellPosX, GridCellPosY);
 
+        LivingCellsCount++;
     }
 }
